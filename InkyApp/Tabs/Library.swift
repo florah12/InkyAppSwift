@@ -1,61 +1,98 @@
-//
-//  LibraryPage.swift
-//  InkyApp
-
-
 import SwiftUI
 
-struct Library: View {
-//View Properties
+struct Bookshelf: View {
+    @Binding var books: [Book]
+    @Binding var recentlyViewedBooks: [Book]
+
     var body: some View {
-        ScrollView(.vertical){
-            LazyVStack(spacing: 15){
-                DummyMessagesView()
-            }
-            .safeAreaPadding(15)
-            .safeAreaInset(edge: .top, spacing: 0){
-                LibraryTitle()
+        NavigationView {
+            ScrollView {
+                VStack(alignment: .leading) {
+                    Text("Bookshelf")
+                        .font(.largeTitle.bold())
+                        .padding(.horizontal)
+                        .padding(.top, 20)
+
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                        ForEach(books) { book in
+                            ZStack(alignment: .topTrailing) {
+                                NavigationLink(destination: ReaderView(book: book, recentlyViewedBooks: $recentlyViewedBooks)) {
+                                    BookGridCard(book: book)
+                                }
+
+                                // Delete Button
+                                Button(action: {
+                                    deleteBook(book)
+                                }) {
+                                    Image(systemName: "trash")
+                                        .foregroundColor(.white)
+                                        .padding(8)
+                                        .background(Color.red)
+                                        .clipShape(Circle())
+                                }
+                                .offset(x: -10, y: 10)
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.top, 10)
+                }
             }
         }
     }
-    
-//Expandable Navigation Bar
-    @ViewBuilder
-    func LibraryTitle(_ title:String = "Bookshelf") -> some View {
-        VStack(spacing: 10){
-            //Title
-            Text(title)
-                .font(.largeTitle.bold())
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.bottom, 10)
+
+    private func deleteBook(_ book: Book) {
+        if let index = books.firstIndex(where: { $0.id == book.id }) {
+            books.remove(at: index)
+            saveBooks()
         }
-        .padding(.top, 25)
-        .padding(.horizontal, 15)
-        .padding(.bottom, 10)
     }
-    
-    
-// Dummy Messages View
-    @ViewBuilder
-    func DummyMessagesView() -> some View {        ForEach(0..<20, id: \.self){ _ in
-            HStack (spacing: 12){
-                Circle()
-                    .frame(width: 55, height: 55)
-                VStack(alignment: .leading, spacing: 6, content: {
-                    Rectangle()
-                        .frame(width: 140, height: 8)
-                    Rectangle()
-                        .frame(height: 8)
-                    Rectangle()
-                        .frame(width: 80, height: 8)
-                })
+
+    private func saveBooks() {
+        do {
+            let data = try JSONEncoder().encode(books)
+            UserDefaults.standard.set(data, forKey: "books")
+        } catch {
+            print("Failed to save books: \(error.localizedDescription)")
+        }
+    }
+}
+
+struct BookGridCard: View {
+    let book: Book
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            if let cover = book.cover {
+                Image(uiImage: cover)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 150, height: 150)
+                    .clipped()
+                    .cornerRadius(15)
+            } else {
+                RoundedRectangle(cornerRadius: 15)
+                    .fill(Color.gray.opacity(0.2))
+                    .frame(width: 150, height: 150)
+                    .overlay(Text("No Cover").font(.caption))
             }
-            .foregroundStyle(.gray.opacity(0.4))
-            .padding(.horizontal, 15)
+
+            Text(book.title)
+                .font(.headline)
+                .lineLimit(1)
+                .padding(.top, 5)
+
+            Text(book.content ?? "No content")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .lineLimit(1)
         }
     }
 }
 
 #Preview {
-    Library()
+    Bookshelf(books: .constant([
+        Book(title: "Book 1", content: "Some content.", cover: nil),
+        Book(title: "Book 2", content: "More content.", cover: nil)
+    ]), recentlyViewedBooks: .constant([]))
 }

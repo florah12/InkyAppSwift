@@ -1,41 +1,48 @@
-//
-//  ContentView.swift
-//  InkyApp
-//
-
-
 import SwiftUI
 
 struct ContentView: View {
+    @State private var books: [Book] = [] // Shared book list between tabs
+    @State private var recentlyViewedBooks: [Book] = [] // Recently viewed books
+
     var body: some View {
-        TabView {
-            Home()
-                .tabItem {
-                    Image(systemName: "house")
-                    Text("HOME")
-                }
-            Search()
-                .tabItem {
-                    Image(systemName: "magnifyingglass")
-                    Text("SEARCH")
-                }
-            Write()
-                .tabItem {
-                    Image(systemName: "pencil")
-                    Text("WRITE")
-                }
-            Library()
-                .tabItem {
-                    Image(systemName: "book")
-                    Text("LIBRARY")
-                }
-            Notifications()
-                .tabItem {
-                    Image (systemName: "bell")
-                    Text("NOTIFICATIONS")
-                }
+        NavigationView {
+            TabView {
+                // Home Tab
+                Home(recentlyViewedBooks: $recentlyViewedBooks)
+                    .tabItem {
+                        Image(systemName: "house")
+                        Text("HOME")
+                    }
+
+                // Search Tab
+                Search(books: $books) // Pass books to Search view
+                    .tabItem {
+                        Image(systemName: "magnifyingglass")
+                        Text("SEARCH")
+                    }
+
+                // Write Tab
+                Write(books: $books)
+                    .tabItem {
+                        Image(systemName: "pencil")
+                        Text("WRITE")
+                    }
+
+                // Bookshelf Tab
+                Bookshelf(books: $books, recentlyViewedBooks: $recentlyViewedBooks)
+                    .tabItem {
+                        Image(systemName: "book")
+                        Text("BOOKSHELF")
+                    }
+
+                // Notifications Tab (Placeholder)
+                Notifications()
+                    .tabItem {
+                        Image(systemName: "bell")
+                        Text("NOTIFICATIONS")
+                    }
+            }
         }
-        .padding()
     }
 }
 
